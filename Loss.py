@@ -71,11 +71,8 @@ def calculate_loss_and_produce_figure(best_sample_point_hist,
         best_param_vector_at_end_of_each_trial = best_sample_point_hist[:,-1,:]
 
     #best_param_vector_at_end_of_each_trial = best_sample_point_hist[:,-1,:]
-    print (f'best_param_vector_at_end_of_each_trial = {best_param_vector_at_end_of_each_trial}')
-    print (f'true_parameter_value_vector = {true_parameter_value_vector}')
 
     true_parameter_value_vector_normed = normalise_true_param_vector(true_parameter_value_vector, original_param_bounds, new_normalisation_bounds)
-    print (f'true_parameter_value_vector_normed = {true_parameter_value_vector_normed}')
     total_loss_hist = np.zeros(best_param_vector_at_end_of_each_trial.shape[0])
     fig, ax = plt.subplots(1, 1, figsize=(Plotting.set_size(width)))
     for i in range(best_param_vector_at_end_of_each_trial.shape[0]):
@@ -83,8 +80,6 @@ def calculate_loss_and_produce_figure(best_sample_point_hist,
                                                                               previous_BO_bounds,
                                                                               new_normalisation_bounds,
                                                                               ALEBO_bool) 
-        print (f'best_param_vector_at_end_of_each_trial[i] = {best_param_vector_at_end_of_each_trial[i]}')
-        print (f'best_param_vector_at_end_of_one_trial_normed = {best_param_vector_at_end_of_one_trial_normed}')
 
         summed_loss_for_trial, inidividual_losses = loss_function(true_parameter_value_vector_normed, best_param_vector_at_end_of_one_trial_normed)
         total_loss += summed_loss_for_trial
