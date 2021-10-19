@@ -1,21 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 23 15:22:31 2021
-
-@author: shahe
-"""
-
 from scipy import stats
 import numpy as np
 import Thesis_modules.All_thesis_functions.Calibration as Calibration
 import Thesis_modules.All_thesis_functions.Plotting as Plotting
-import Thesis_modules.All_thesis_functions.MSM as MSM
-from numpy.random import seed
 import matplotlib.pyplot as plt
-import time
 import contextlib
-import numpy as np
-from scipy.special import logsumexp
+
 
 @contextlib.contextmanager
 def temp_seed(seed):
@@ -41,8 +30,6 @@ def BC_experiment(param_names,
                 model_func,
                 width):
     
-    #print (f'seed = {int(1000 * time.time()) % 2**32}')
-    #seed(int(1000 * time.time()) % 2**32)
     # Generate random uniform numbers, for MCMC, here, because we set the seed below, and otherwise each number will be the same
     #O = np.random.uniform(Uniform_value_lower_bound, 1.0, size = n_sample_points*2)
     
@@ -60,29 +47,13 @@ def BC_experiment(param_names,
                                                           upper_bounds_vector, 
                                                           vector_non_randomised_parameter_values)[0]
 
-    #random_param_set = true_parameter_value_vector*0.99
     # Set parameter vector to random parameter set
     vec_theta_s = random_param_set
     #vec_y = np.zeros(n_sample_points)
     
     
-    '''
-    Edit from Donovan feedback - hash in to restore previous version
-    '''
-    '''
-    pseudo_true_data = np.zeros((len_data, n_repeats_per_param_setting))
-    # Loop over number of repeats, for each param setting, and create pseudo-true data from multiple runs
-    for i in range(0, n_repeats_per_param_setting):
-        with temp_seed(i*1234):
-            pseudo_true_data[:,i] = model_func(true_parameter_value_vector, len_data)
-    '''
-    '''
-    Edit from Donovan feedback - hash in to restore previous version
-    '''
     
-    '''
-    Edit from Donovan feedback - hash out to restore previous version
-    '''
+
     
     n_repeats_of_simulated_data = 10
     #Instead of creating a pseudo-true matrix, over multiple runs, we need just one pseudo-true vector, at a random seed. 
@@ -94,9 +65,7 @@ def BC_experiment(param_names,
     plt.plot(pseudo_true_data)
     plt.show()
     plt.close()
-    '''
-    Edit from Donovan feedback - hash out to restore previous version
-    '''
+
     
     
     # Flatten pseudo-true data
@@ -156,20 +125,18 @@ def BC_experiment(param_names,
             Edit from Donovan feedback - hash out to restore previous version
             '''
             for m in range(0, n_repeats_of_simulated_data):
+                
             # Generate data with theta_s
                 with temp_seed(m*1234):
                     data_with_theta_s = model_func(vec_theta_s, len_data) 
+                    
             #Store data in array, over repeats
                 theta_s_data_storage[m*len_data: (m+1)*len_data] = data_with_theta_s
-                #print (f'vec_theta_s = {vec_theta_s}')
-                #plt.plot(data_with_theta_s)
-                #plt.show()
-                #plt.close()
-            #print (f'theta_s_data_storage = {theta_s_data_storage}')
+                
             # Perform KDE on the entire theta_s dataset
-            
             theta_s_data_storage = np.nan_to_num(theta_s_data_storage, nan=1.0*10**10, posinf=1.0*10**10, neginf=-1.0*10**10)
             kde_theta_s_data_storage = stats.gaussian_kde(theta_s_data_storage)
+            
             # Evaluate the single previously generated pseudo-true dataset against the KDE of the repeated theta_s data
             kde_values_of_pseudo_true_data_against_theta_s = kde_theta_s_data_storage.evaluate(pseudo_true_data)
             kde_values_of_pseudo_true_data_against_theta_s = kde_values_of_pseudo_true_data_against_theta_s[kde_values_of_pseudo_true_data_against_theta_s != 0]
@@ -178,44 +145,23 @@ def BC_experiment(param_names,
             likelihood_of_pseudo_true_against_theta_s = np.sum(np.log(kde_values_of_pseudo_true_data_against_theta_s))
             print (f'likelihood_of_pseudo_true_against_theta_s = {likelihood_of_pseudo_true_against_theta_s}')
 
-            '''
-            Edit from Donovan feedback - hash out to restore previous version
-            '''
-            
-            '''
-            Edit from Donovan feedback - hash in to restore previous version
-            '''
-            '''
-            # Form KDE distribution for pseudo-true data, for iteration k 
-            kde_pseudo_true_data = stats.gaussian_kde(pseudo_true_data[:,k], bw_method = 'silverman')
-            # Set seed, as the same seed used to generate this column of pseudo-true data
-            with temp_seed(k*1234):
-                # Generate data from model, with theta_s
-                data_with_theta_s = model_func(vec_theta_s, len_data)
-            # Calculate likelihood of theta_s 
-            kde_values_data_with_theta_s = kde_pseudo_true_data.evaluate(data_with_theta_s)
-            kde_values_data_with_theta_s = kde_values_data_with_theta_s[kde_values_data_with_theta_s != 0]
-            #likelihood_of_data_with_theta_s = np.prod(kde_values_data_with_theta_s)
-            #likelihood_of_data_with_theta_s = np.log(np.prod(kde_values_data_with_theta_s))
-            #likelihood_of_data_with_theta_s = np.sum(np.log(kde_values_data_with_theta_s))
-            likelihood_of_data_with_theta_s = -MSM.MSM_wrapper(pseudo_true_data[:,k], data_with_theta_s) + 1000
-            '''
-            '''
-            Edit from Donovan feedback - hash in to restore previous version
-            '''
-            #print (f'number of zeros in KDE values = {np.count_nonzero(kde_values_data_with_theta_s==0)}')
             # Calculate posterior
             posterior_for_theta_s_iteration_k = likelihood_of_pseudo_true_against_theta_s * prior_scalar # uniform prior
+            
             #Store posterior for this iteration 
             posterior_for_theta_s_temp_storage[k] = posterior_for_theta_s_iteration_k
+        
         # Get mean of posteriors, over repeated runs at theta_s
         posterior_for_theta_s = np.mean(posterior_for_theta_s_temp_storage)
+        
         # Store mean posterior
         posterior_theta_s_hist[i] = posterior_for_theta_s
         
         theta_c_data_storage = np.zeros(len_data*n_repeats_of_simulated_data)
+        
         # Initialise theta_c storage for repeats of posterior calculation 
         posterior_for_theta_c_temp_storage = np.zeros(n_repeats_per_param_setting)
+        
         # Loop over number of repeats per param setting
         for l in range(0, n_repeats_per_param_setting):
             
@@ -223,13 +169,15 @@ def BC_experiment(param_names,
             Edit from Donovan feedback - hash out to restore previous version
             '''
             for m in range(0, n_repeats_of_simulated_data):
-            # Generate data with theta_s
+            
+                # Generate data with theta_s
                 with temp_seed(m*1234):
-                # Generate data from model, with theta_c  
+                
+                    # Generate data from model, with theta_c  
                     data_with_theta_c = model_func(vec_theta_c, len_data) 
+            
             #Store data in array, over repeats
                 theta_c_data_storage[m*len_data: (m+1)*len_data] = data_with_theta_c
-            #print (f'theta_c_data_storage = {theta_c_data_storage}')
             
             theta_c_data_storage = np.nan_to_num(theta_c_data_storage, nan=1.0*10**10, posinf=1.0*10**10, neginf=-1.0*10**10)
 
@@ -255,40 +203,7 @@ def BC_experiment(param_names,
                 plt.title(f'vec_theta_c = {vec_theta_c}')
                 plt.show()
                 plt.close()
-            '''
-            Edit from Donovan feedback - hash out to restore previous version
-            '''
-            
-            '''
-            Edit from Donovan feedback - hash in to restore previous version
-            '''
-            '''
-            # Form KDE distribution for pseudo-true data, for iteration l 
-            kde_pseudo_true_data = stats.gaussian_kde(pseudo_true_data[:,l], bw_method = 'silverman')
-            # Set seed, as the same seed used to generate this column of pseudo-true data
-            with temp_seed(l*1234):
-                # Generate data from model, with theta_c        
-                data_with_theta_c = model_func(vec_theta_c, len_data)
-            # Choose whether to plot data generated with theta_c against KDE of theta_s or not
-            if (plot_kde == True):      
-                points_for_kde = np.linspace(min(data_with_theta_c), max(data_with_theta_c), 1000)
-                fig, ax = plt.subplots(figsize=Plotting.set_size(width))
-                ax.hist(data_with_theta_c, density = True, bins=100, alpha=0.3)
-                ax.plot(points_for_kde, kde_pseudo_true_data(points_for_kde))
-                plt.show()
-                plt.close()
-            # Calculate likelihood of theta_c
-            kde_values_data_with_theta_c = kde_pseudo_true_data.evaluate(data_with_theta_c) 
-            kde_values_data_with_theta_c = kde_values_data_with_theta_c[kde_values_data_with_theta_c != 0]
 
-            #likelihood_of_data_with_theta_c = np.prod(kde_values_data_with_theta_c)
-            #likelihood_of_data_with_theta_c = np.log(np.prod(kde_values_data_with_theta_c))
-            #likelihood_of_data_with_theta_c = np.sum(np.log(kde_values_data_with_theta_c))
-            likelihood_of_data_with_theta_c = - MSM.MSM_wrapper(pseudo_true_data[:,k], data_with_theta_c) + 1000
-            '''
-            '''
-            Edit from Donovan feedback - hash in to restore previous version
-            '''
 
             # Calculate posterior of theta_c 
             posterior_for_theta_c_iteration_l = likelihood_of_pseudo_true_against_theta_c * prior_scalar # uniform prior
@@ -314,14 +229,6 @@ def BC_experiment(param_names,
             acceptance_counter += 1
         else:
             vec_theta_s = vec_theta_s.copy()
-            
-        print (f'alpha = {alpha}')
-        print (f'posterior_for_theta_c = {posterior_for_theta_c}')
-        print (f'posterior_for_theta_s = {posterior_for_theta_s}')
-
-
-    print (f'acceptance_counter = {acceptance_counter}')
-    print (f'l_theta_c_less_than_l_theta_s_counter = {l_theta_c_less_than_l_theta_s_counter}')
 
     # Get number of accepted points
     n_accepted_points = vec_theta_chain.shape[0]
@@ -338,9 +245,10 @@ def calc_posterior_of_sample_point(pseudo_true_data, param_vector, true_paramete
     #pseudo_true_data = model_func(true_parameter_value_vector, len_data)
     if (true_param_vector_bool):
         if (KS_bool):
-            pseudo_true_data = model_func(true_parameter_value_vector, len_data, param_names_KS, 1)
+            pseudo_true_data = model_func(true_parameter_value_vector, len_data, param_names_KS, 1) 
         else:
-            pseudo_true_data = model_func(true_parameter_value_vector, len_data)
+            #pseudo_true_data = model_func(true_parameter_value_vector, len_data)
+            pseudo_true_data = pseudo_true_data # Edit - 18 May 2021 - pseudo-true data shouldn't be recalculated!
 
     # Generate prior (= 1 for now)
     prior_scalar = 1.0
@@ -364,7 +272,6 @@ def calc_posterior_of_sample_point(pseudo_true_data, param_vector, true_paramete
             param_vector_data_storage[m*len_data: (m+1)*len_data] = data_with_param_vector
         
         #if (np.isnan(param_vector_data_storage).any()):
-            #print ('NANS IN MODEL DATA - CHECK NAN MAPPING VALUE')
         param_vector_data_storage = np.nan_to_num(param_vector_data_storage, nan=1.0*10**4, posinf=1.0*10**4, neginf=-1.0*10**4)
         kde_param_vector_data_storage = stats.gaussian_kde(param_vector_data_storage)
         # Evaluate the single previously generated pseudo-true dataset against the KDE of the repeated theta_s data
@@ -375,7 +282,6 @@ def calc_posterior_of_sample_point(pseudo_true_data, param_vector, true_paramete
         # Be aware, here we look at a different surface, the negative log-likelihood. 
         likelihood_of_pseudo_true_against_param_vector = -np.sum(np.log(kde_values_of_pseudo_true_data_against_param_vector))
         #likelihood_of_pseudo_true_against_param_vector = np.prod(kde_values_of_pseudo_true_data_against_param_vector)
-        #print (likelihood_of_pseudo_true_against_param_vector)
         posterior_for_param_vector_iteration_k = likelihood_of_pseudo_true_against_param_vector * prior_scalar # uniform prior
         #Store posterior for this iteration 
         posterior_for_param_vector_temp_storage[k] = posterior_for_param_vector_iteration_k
@@ -383,5 +289,4 @@ def calc_posterior_of_sample_point(pseudo_true_data, param_vector, true_paramete
         
     posterior_for_param_vector = np.mean(posterior_for_param_vector_temp_storage)
     std_dev_of_posterior = np.std(posterior_for_param_vector_temp_storage)
-    #print (f'posterior_for_param_vector_temp_storage = {posterior_for_param_vector_temp_storage}')
     return posterior_for_param_vector, std_dev_of_posterior
