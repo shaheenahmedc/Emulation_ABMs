@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 10 14:34:08 2020
-
-@author: Shaheen.Ahmed
-"""
 import numpy as np 
 import matplotlib.pyplot as plt
 from numpy.random import seed
@@ -15,18 +9,30 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     '''
     This function outputs the fractional difference between the seven designated moments, between a model_generated time series and pseudo_true (or empirical, but name hasn't been changed) time series.
     
-    Inputs:
+    Parameters
+    ---------- 
     pseudo_true_data = numpy array of a time series output from model with known parameters, or empirical time series. 
     model_generated_data = numpy array of a time series output from model, with test parameters.
     
-    Outputs:
-    numpy array, length 7, of fractional difference in moments, between model_generated and pseudo_true/empirical data.
+    Outputs
+    ----------
+    fractional_difference_between_moments: numpy array, length 7, of fractional difference in moments, between model_generated and pseudo_true/empirical data.
+    simple_weighting_matrix_diagonal_elements: diagonal elements of weighting matrix, as a vector. 
+    '''
+    
+    '''
+    Note - 10 Sep 2021:
+    This code definitely can be simplified, as there's a lot of repeated calculations amongst the seven moments. 
+    But it works currently, and doing so is very far down my priority list sadly. 
+    If I end up adjusting the MSM calculation in the future, I will hope to refactor this code then. 
     '''
 
     pseudo_true_moments = np.empty(7)
     model_generated_moments = np.empty(7)
 
-    # Moment 1 - variance
+    '''
+    Moment 1 - variance
+    '''
     # Our longest lag = 5, therefore start at 4, loop from 0-4, 1-5, 2-6 etc
     longest_lag = 5
     m_i_model_generated_variance = 0
@@ -52,8 +58,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     m_i_pseudo_true_variance_history_minus_avg_moment_squared = m_i_pseudo_true_variance_history_minus_avg_moment**2
     w_i_j_1 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_variance_history_minus_avg_moment_squared))
     
-
-    # Moment 2 - Kurtosis
+    '''
+    Moment 2 - Kurtosis
+    '''
     m_i_model_generated_kurtosis = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -77,8 +84,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     m_i_pseudo_true_kurtosis_history_minus_avg_moment_squared = m_i_pseudo_true_kurtosis_history_minus_avg_moment**2
     w_i_j_2 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_kurtosis_history_minus_avg_moment_squared))
 
-    
-    # Moment 3 - Autocorrelation function at lag 1
+    '''
+    Moment 3 - Autocorrelation function at lag 1
+    '''
     m_i_model_generated_acf_lag_1 = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -102,7 +110,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     w_i_j_3 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_acf_lag_1_history_minus_avg_moment_squared))
     
     
-    # Moment 4 - Autocorrelation function of squared series at lag 1
+    '''
+    Moment 4 - Autocorrelation function of squared series at lag 1
+    '''
     m_i_model_generated_acf_squared_lag_1 = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -126,7 +136,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     w_i_j_4 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_acf_squared_lag_1_history_minus_avg_moment_squared))
     
     
-    # Moment 5 - Autocorrelation function of absolute series at lag 1
+    '''
+    Moment 5 - Autocorrelation function of absolute series at lag 1
+    '''
     m_i_model_generated_acf_abs_lag_1 = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -150,7 +162,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     w_i_j_5 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_acf_abs_lag_1_history_minus_avg_moment_squared))
     
     
-    # Moment 6 - Autocorrelation function of squared series at lag 5
+    '''
+    Moment 6 - Autocorrelation function of squared series at lag 5
+    '''
     m_i_model_generated_acf_squared_lag_5 = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -175,8 +189,9 @@ def generate_moments_for_MSM(pseudo_true_data, model_generated_data):
     m_i_pseudo_true_acf_squared_lag_5_history_minus_avg_moment_squared = m_i_pseudo_true_acf_squared_lag_5_history_minus_avg_moment**2
     w_i_j_6 = 1.0 / ((1.0/len(pseudo_true_data)) * np.sum(m_i_pseudo_true_acf_squared_lag_5_history_minus_avg_moment_squared))
     
-    
-    # Moment 7 - Autocorrelation function of absolute series at lag 5
+    '''
+    Moment 7 - Autocorrelation function of absolute series at lag 5
+    '''
     m_i_model_generated_acf_abs_lag_5 = 0
     for i in range(0, len(model_generated_data)-(longest_lag + 1)):
         z_t = model_generated_data[i:i+(longest_lag + 1)]
@@ -210,15 +225,18 @@ def apply_weighting_matrix_to_moments(fractional_difference_between_moments, sim
     Weights for uncertainty in each moment.
     Can set to identity matrix initially. 
     
-    Inputs:
-    fractional_difference_between_moments = vector of seven fractional differences in moments, between model_generated and pseudo_true or empirical data.
-    number_of_moments = how many of the moments to include in the MSM calculation. Trims matrices to exclude.
-    identity_matrix_bool = boolean for using identity matrix or not.
-    simple_weighting_matrix_diagonal_elements = vector of diagonal elements. Makes bool before obsolete, fix.
+    Parameters
+    ---------- 
+    fractional_difference_between_moments:vector of seven fractional differences in moments, between model_generated and pseudo_true or empirical data.
+    number_of_moments: how many of the moments to include in the MSM calculation. Trims matrices to exclude.
+    identity_matrix_bool: boolean for using identity matrix or not.
+    simple_weighting_matrix_diagonal_elements: vector of diagonal elements. Makes bool before obsolete, fix.
     
-    Outputs:
-    numpy array, length 7, of fractional difference in moments, between model_generated and pseudo_true_or_empirical data, weighted for uncertainty.
+    Outputs
+    ---------- 
+    frac_diff_transposed_dot_s_dot_frac_diff: numpy array, length 7, of fractional difference in moments, between model_generated and pseudo_true_or_empirical data, weighted for uncertainty.
     '''
+    
     if (identity_matrix_bool == True):   
         identity_matrix = np.identity(number_of_moments, dtype = float) 
         i_dot_frac_diff = identity_matrix.dot(fractional_difference_between_moments[0:number_of_moments])
@@ -238,14 +256,16 @@ def MSM_wrapper(pseudo_true_or_empirical_data, model_generated_data):
     '''
     This function wraps the fractional moment difference generator and the weighting matrix application into one function.
     
-    Inputs:
-    pseudo_true_or_empirical_data = numpy array of either a time series output from model with known parameters, or real data.
-    model_generated_data = numpy array of a time series output from model, with test parameters.
-    number_of_moments = how many of the moments to include in the MSM calculation. Trims matrices to exclude.
-    identity_matrix_bool = boolean for using identity matrix or not.
+    Parameters
+    ---------- 
+    pseudo_true_or_empirical_data: numpy array of either a time series output from model with known parameters, or real data.
+    model_generated_data: numpy array of a time series output from model, with test parameters.
+    number_of_moments: how many of the moments to include in the MSM calculation. Trims matrices to exclude.
+    identity_matrix_bool: boolean for using identity matrix or not.
     
-    Outputs:
-    Scalar distance measure between two input time series
+    Outputs
+    ---------- 
+    distance_measure: Scalar distance measure between two input time series
     '''
     frac_diff_moments, simple_weighting_matrix_diagonal_elements = generate_moments_for_MSM(pseudo_true_or_empirical_data, model_generated_data)
     distance_measure = apply_weighting_matrix_to_moments(frac_diff_moments, simple_weighting_matrix_diagonal_elements = simple_weighting_matrix_diagonal_elements)
@@ -265,19 +285,21 @@ def calculate_and_plot_param_settings_vs_MSM_fn_1d(
     This function plots parameter values against their distance function from a pseudo-true time series with known values.
     Only work for models with one parameter.
     
-    Inputs:
-    lower_bound_for_parameter = lower bound for pseudo-true time series.
-    upper_bound_for_parameter = upper bound for pseudo-true time series.
-    length_time_series = length of pseudo-true time series. Model_generated series' will be some multiple of this (2 currently).
-    number_of_parameter_sets = how many points in parameter range to sample. 
-    number_of_repetitions_per_parameter_setting = how many repetitions at each parameter setting to undertake.
-    true_parameter_value = the parameter value used to generate the pseudo-true time series.
-    initial_value = In the AR(1) model, an initial value for the time series needs to be provided.
-    number_of_moments = how many moments to include in MSM calculation. 
+    Parameters
+    ---------- 
+    lower_bound_for_parameter: lower bound for pseudo-true time series.
+    upper_bound_for_parameter: upper bound for pseudo-true time series.
+    length_time_series: length of pseudo-true time series. Model_generated series' will be some multiple of this (2 currently).
+    number_of_parameter_sets: how many points in parameter range to sample. 
+    number_of_repetitions_per_parameter_setting: how many repetitions at each parameter setting to undertake.
+    true_parameter_value: the parameter value used to generate the pseudo-true time series.
+    initial_value: In the AR(1) model, an initial value for the time series needs to be provided.
+    number_of_moments: how many moments to include in MSM calculation. 
     
-    Outputs:
-    used_parameter_settings = numpy array of used parameter settings
-    MSM_value_for_each_parameter_setting = Calculation of MSM for each parameter setting, averaged over repeated runs at each parameter setting. 
+    Outputs
+    ---------- 
+    used_parameter_settings: numpy array of used parameter settings
+    MSM_value_for_each_parameter_setting: Calculation of MSM for each parameter setting, averaged over repeated runs at each parameter setting. 
     '''
     used_parameter_settings = np.linspace(lower_bound_for_parameter, upper_bound_for_parameter, number_of_parameter_sets)
     pseudo_true_ar1_data = generate_ar1_series(true_parameter_value, length_time_series)
@@ -292,13 +314,9 @@ def calculate_and_plot_param_settings_vs_MSM_fn_1d(
             seed(j*1234)
             model_generated_data = generate_ar1_series(random_parameter_setting, length_time_series*2)
             #plot_ar1_series(model_generated_data, random_parameter_setting)
-            #print (f'----------------------------------------------')
-            #print (f'random_alpha = {random_parameter_setting}')
             MSM_value = MSM_wrapper(pseudo_true_ar1_data, model_generated_data, number_of_moments, identity_matrix_bool = False)
             MSM_value_array[j] = MSM_value
-            #print (f'i = {i}, MSM_value_array = {MSM_value_array}')
         MSM_value_averaged = sum(MSM_value_array)/number_of_repetitions_per_parameter_setting
-        #print (f'sum(MSM_value_array) = {sum(MSM_value_array)}, MSM_value_averaged = {MSM_value_averaged}')
         MSM_value_for_each_parameter_setting[i] = MSM_value_averaged
     
     plt.figure()
@@ -322,7 +340,8 @@ def calc_and_plot_MSM_empirical_vs_model_generated(
     This function plots parameter values against their distance function from an empirical time series with known values.
     Only work for models with one parameter.
     
-    Inputs:
+    Parameters
+    ---------- 
     lower_bound_for_parameter = lower bound for best estimate of parameter in empirical time series.
     upper_bound_for_parameter = upper bound for best estimate of parameter in empirical time series.
     empirical_time_series = numpy array of empirical time series.
@@ -330,7 +349,8 @@ def calc_and_plot_MSM_empirical_vs_model_generated(
     number_of_repetitions_per_parameter_setting = how many repetitions at each parameter setting to undertake.
     initial_value = In the AR(1) model, an initial value for the time series needs to be provided.
     
-    Outputs:
+    Outputs
+    ---------- 
     used_parameter_settings = numpy array of used parameter settings
     MSM_value_for_each_parameter_setting = Calculation of MSM for each parameter setting, averaged over repeated runs at each parameter setting. 
     '''
@@ -364,11 +384,13 @@ def plot_1_dim_MSM(used_parameter_settings, MSM_value_for_each_parameter_setting
     '''
     This function plots a 1d MSM surface, for one varying parameter.
     
-    Inputs:
+    Parameters
+    ---------- 
     used_parameter_settings = (1 x (number of sample points - number of NANs in MSM)) shape numpy array, of parameter to vary.  
     MSM_values = (number of sample points - number of NANs in MSM) shape numpy array, of non-NAN MSM values. 
     
-    Output:
+    Outputs
+    ---------- 
     1d MSM plot. 
     '''
     
