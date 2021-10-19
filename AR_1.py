@@ -13,12 +13,18 @@ def generate_ar1_series(parameter_vector, length, x_0 = 0, parameter_names = Non
     '''
     This function outputs an AR(1) time series.
     
-    Inputs:
-    length = length of time series 
-    parameter_vector = numpy array of all parameters in model ([0] == alpha)
-    x_0 = initial value in time series
-    Outputs:
-    numpy array, length = length, of AR(1) process
+    Parameters
+    ----------
+    length: length of time series 
+    parameter_vector: numpy array of all parameters in model 
+    x_0: initial value in time series
+    parameter_names: bad design, in Calibration.py, model_func is our general data generating process, but KS data generator needs four parameters, 
+        while AR, BH and FW only need 2. So I had to include these unused parameters here. Fix later. 
+    seed_for_KS: same as parameter_names. Bad design, figure out how to remove.
+    
+    Outputs
+    -------
+    ar1_data: AR(1) data, of length = length
     '''
     alpha = parameter_vector[0] 
     ar1_data = np.empty(length)
@@ -41,5 +47,3 @@ def plot_ar1_series(ar1_series_1, width, tex_fonts):
 
     plt.title(f'Example AR(1) Time Series')
     plt.savefig(data_print_filename, format = 'pdf', bbox_inches='tight')
-
-    #plt.show()
