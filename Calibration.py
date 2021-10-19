@@ -46,7 +46,8 @@ def run_n_dim_frequentist_calibration(
     This function plots (where possible) parameter values against the distance function passed in, against a pseudo-true (or empirical) time series with known values.
     Now should work for n number of parameters.
     
-    Inputs:
+    Parameters
+    ----------
     parameter_lower_bounds_vector = vector of lower bounds for parameters.
     parameter_upper_bounds_vector = vector of upper bounds for parameters.
     length_time_series = length of pseudo-true/empirical time series. Model_generated series' will be some multiple of this (2 currently).
@@ -63,7 +64,9 @@ def run_n_dim_frequentist_calibration(
     equal_length_time_series_bool = If pseudo and model generated data should be of equal length (according to fitness function)
     number_of_moments = how many moments to include in MSM calculation. 
     sample_points_input = when we need to bypass random hypercube sampling, with an input of points (Bayesian Optimization)
-    Outputs:
+    
+    Outputs
+    ----------
     used_parameter_settings = (d x n) numpy array of used parameter settings (d = dimensionality of parameter space, also number of rows. n = number of sample points in parameter space, also number of columns.)
     But if we input a set of sample points, currently we're inputting them as (n x d) and transposing
     MSM_value_for_each_parameter_setting = Calculation of MSM for each parameter setting, averaged over repeated runs at each parameter setting. 
@@ -82,9 +85,6 @@ def run_n_dim_frequentist_calibration(
         used_parameter_settings = sample_points_input
         
         #used_parameter_settings = used_parameter_settings # Should transpose input from (samples x dim) to (dim x samples)
-    
-    #print (f'used_parameter_settings = {used_parameter_settings}')
-    #print (f'used_parameter_settings.shape = {used_parameter_settings.shape}')
 
     # Sometimes, due to working between numpy arrays and pytorch tensors, extra dimensions enter the array.
     #used_parameter_settings = used_parameter_settings.squeeze()
@@ -93,7 +93,6 @@ def run_n_dim_frequentist_calibration(
     # Pass an empirical_time_series? bool, to avoid having to re-write code for external calibration
     #seed(1234)
     #random.seed(1234)
-    #print (f'indices_randomised_parameters = {indices_randomised_parameters}')
     #pseudo_true_model_data = model_func(true_parameter_value_vector, length_time_series)
 
     # Initialise fitness values array
@@ -108,7 +107,6 @@ def run_n_dim_frequentist_calibration(
     
     # Loop over sample points in parameter space, calculate distance to pseudo-true data
     for i in range(0, number_of_parameter_sets):
-        #print (f'loop number in run_n_dim_frequentist_calibration = {i}')
 
         # Get individual sample point 
         random_parameter_setting = used_parameter_settings[:,i] 
@@ -118,13 +116,11 @@ def run_n_dim_frequentist_calibration(
         
         # Loop over repetitions for one sample point
         for j in range(0, number_of_repetitions_per_parameter_setting):
-            #print (f'repetition loop = {j}')
             parameter_names_copy_rndSeed = parameter_names.copy()
             parameter_names_copy_rndSeed.append('_rndSeed_')
             #seed((n_run*j+1)*1234)
             #with temp_seed(n_run*(j+1)*1234):
             with temp_seed(j*1234):
-                #print (f'j = {j}')
                 pseudo_true_model_data = model_func(true_parameter_value_vector, 
                                                     length_time_series, 
                                                     parameter_names = parameter_names_copy_rndSeed,
@@ -157,11 +153,6 @@ def run_n_dim_frequentist_calibration(
 
             # Calculate and store repetitions of fitness between model generated and pseudo-true data, at one sample point
             fitness_value = fitness_func(pseudo_true_model_data, model_generated_data)        
-            #print (f'i,j, fitness = {i,j, fitness_value}')
-            #print (f'loop, model_generated_data[-10:-1] = {j, model_generated_data[-10:-1]}')
-            #print (f'loop, pseudo_true_model_data[-10:-1] = {j, pseudo_true_model_data[-10:-1]}')
-            #print (f'true_parameter_value_vector = {true_parameter_value_vector}')
-            #print (f'random_parameter_setting = {random_parameter_setting}')
             fitness_value_array_single_parameter_setting[j] = fitness_value          
         
             ax.scatter(random_parameter_setting[indices_randomised_parameters[0]],
@@ -169,12 +160,10 @@ def run_n_dim_frequentist_calibration(
         # Average over repetitions 
         if (use_median_fitness):
             print ('Median fitness being used!')
-            #print (f'fitness_value_array_single_parameter_setting = {fitness_value_array_single_parameter_setting}')
             fitness_value_averaged = np.median(fitness_value_array_single_parameter_setting) # Use median fitness, if noise is very non-Gaussian (such as in KS)
             fitness_value_for_each_parameter_setting[i] = fitness_value_averaged
 
         else:
-            ##print (f'fitness_value_array_single_parameter_setting = {fitness_value_array_single_parameter_setting}')
             fitness_value_averaged = sum(fitness_value_array_single_parameter_setting)/number_of_repetitions_per_parameter_setting
             fitness_value_for_each_parameter_setting[i] = fitness_value_averaged
         
@@ -187,8 +176,7 @@ def run_n_dim_frequentist_calibration(
             fitness_value_for_each_parameter_setting[np.isnan(fitness_value_for_each_parameter_setting)] = 1.0*10**3
             fitness_array_with_nans_removed = fitness_value_for_each_parameter_setting
             used_param_settings_with_sample_points_with_nan_fitness_removed = used_parameter_settings
-            #print (f'used_param_settings_with_sample_points_with_nan_fitness_removed.shape = {used_param_settings_with_sample_points_with_nan_fitness_removed.shape}')
-            #print (f'fitness_array_with_nans_removed.shape = {fitness_array_with_nans_removed.shape}')
+
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     #fig.savefig(r'C:\Users\shahe\OneDrive\Documents\Utrecht_19_20\Thesis\Numerical_Experiments\Figures\KS\mult_runs_test_' + timestr + '.pdf', format = 'pdf', bbox_inches = 'tight')
@@ -218,8 +206,6 @@ def run_n_dim_frequentist_calibration(
         else:
             first_dim_used_param_settings_with_fitness_nans_removed = used_param_settings_with_sample_points_with_nan_fitness_removed[indices_randomised_parameters[0]]
             second_dim_used_param_settings_with_fitness_nans_removed = used_param_settings_with_sample_points_with_nan_fitness_removed[indices_randomised_parameters[1]]
-            #print (f'first_dim_used_param_settings_with_fitness_nans_removed = {first_dim_used_param_settings_with_fitness_nans_removed}')
-            #print (f'second_dim_used_param_settings_with_fitness_nans_removed = {second_dim_used_param_settings_with_fitness_nans_removed}')
     
             plot_3d_fitness_surface(first_dim_used_param_settings_with_fitness_nans_removed, 
                                     second_dim_used_param_settings_with_fitness_nans_removed, 
@@ -249,25 +235,26 @@ def plot_1_dim_fitness_surface(used_parameter_settings, fitness_value_for_each_p
     '''
     This function plots a 1d fitness surface, for one varying parameter.
     
-    Inputs:
+    Parameters
+    ----------
     used_parameter_settings = (1 x (number of sample points - number of NANs in fitness)) shape numpy array, of parameter to vary.  
     fitness_value_for_each_parameter_setting = (number of sample points - number of NANs in fitness) shape numpy array, of non-NAN fitness values. 
     
-    Output:
+    Outputs
+    ----------
     1d fitness plot. 
     '''
     print (f'true_parameter_value = {true_parameter_value}')
+    '''
     plt.figure(figsize = Plotting.set_size(page_width))
     plt.scatter(used_parameter_settings, fitness_value_for_each_parameter_setting, s = 25, marker = '.', color = 'k')
     plt.xlabel(parameter_name)
     plt.ylabel("MSM value")
     if (true_parameter_value != None):
         plt.axvline(x = true_parameter_value, color = 'r')
-    #plt.title(FC_figure_title)
-    #plt.yscale('log')
-    plt.savefig(FC_figure_filename, format = 'pdf', bbox_inches='tight')
-    #plt.show()
-    plt.close()
+    #plt.savefig(FC_figure_filename, format = 'pdf', bbox_inches='tight')
+    #plt.close()
+    '''
 
 def plot_3d_fitness_surface(first_dim_executed_param_values, 
                             second_dim_executed_param_values, 
@@ -283,26 +270,21 @@ def plot_3d_fitness_surface(first_dim_executed_param_values,
     '''
     This function plots a 3d fitness surface, two varying parameters. 
     
-    Inputs:
+    Parameters
+    ----------
     first_dim_executed_param_values = (1 x (number of sample points - number of NANs in fitness)) shape numpy array, of first parameter to vary. 
     secon_dim_executed_param_values = (1 x (number of sample points - number of NANs in fitness)) shape numpy array, of second parameter to vary. 
     fitness_values = (number of sample points - number of NANs in fitness) shape numpy array, of non-NAN fitness values. 
     
-    Output: 
+    Outputs
+    ----------
     3d fitness plot.
     '''
     fig = plt.figure(figsize = Plotting.set_size(page_width))
     ax = fig.add_subplot(111)
-    #print (f' true_parameter_vector[0], true_parameter_vector[1], max(fitness_values) = {true_parameter_vector[indices_randomised_parameters[0]], true_parameter_vector[indices_randomised_parameters[1]], max(fitness_values)}')
-    #ax.plot_trisurf(first_dim_executed_param_values, second_dim_executed_param_values, Z = fitness_values, cmap=cm.coolwarm, alpha = 0.7)
-    #ax.plot(true_parameter_vector[indices_randomised_parameters[0]], true_parameter_vector[indices_randomised_parameters[1]], max(fitness_values),'k-',alpha=1.0, linewidth=0.5)
 
     ax.set_xlabel(first_param_name, fontsize=10)
     ax.set_ylabel(second_param_name, fontsize=10)
-    #ax.set_zlabel('Fitness value', fontsize=10)
-    #ax.view_init(azim=30)
-    #plt.title(FC_figure_title)
-    #ax.view_init(azim=0, elev=90)
     xi = np.linspace(min(first_dim_executed_param_values), max(first_dim_executed_param_values), 50)
     yi = np.linspace(min(second_dim_executed_param_values), max(second_dim_executed_param_values), 50)
     triang = tri.Triangulation(first_dim_executed_param_values, second_dim_executed_param_values)
@@ -310,10 +292,6 @@ def plot_3d_fitness_surface(first_dim_executed_param_values,
     Xi, Yi = np.meshgrid(xi, yi)
     zi = interpolator(Xi, Yi)
 
-    #contour = ax.contour(xi, yi, zi, levels=28, linewidths=0.1, colors='k')
-    #for c in contour.collections:
-        #c.set_edgecolor("face")
-    print (indices_randomised_parameters[0])
     cntr1 = ax.contourf(xi, yi, zi, levels=50, cmap="RdBu_r")
     fig.colorbar(cntr1, ax=ax)
     ax.set_xlim(parameter_lower_bounds_vector[indices_randomised_parameters[0]], parameter_upper_bounds_vector[indices_randomised_parameters[0]])
@@ -321,10 +299,7 @@ def plot_3d_fitness_surface(first_dim_executed_param_values,
     ax.scatter(true_parameter_vector[indices_randomised_parameters[0]], true_parameter_vector[indices_randomised_parameters[1]], color = 'r', marker = 'x')
     ax.scatter(first_dim_executed_param_values, second_dim_executed_param_values, color = 'k', marker = 'x')
 
-    #ax.axis([first_dim_executed_param_values.min(), second_dim_executed_param_values.max(), fitness_values.min(), fitness_values.max()])
-    #ax.colorbar()
     plt.savefig(FC_figure_filename, format = 'pdf', bbox_inches='tight')
-    #plt.show()
     plt.close()
 
 
@@ -333,11 +308,13 @@ def trim_nans_from_fitness_and_sample_points(used_parameter_settings, fitness_va
     This function removes NAN fitness values, and their corresponding parameter settings. 
     row in used_parameter_settings = parameter, column = sample point.
     
-    Inputs:
+    Parameters
+    ----------
     used_parameter_settings = (dimensionality x number of sample points) shape numpy array, of executed sample points in parameter space. 
     fitness_value_for_each_parameter_setting = (number of sample points) shape numpy array, of fitness values at each sample point. 
     
-    Outputs:
+    Outputs
+    ----------
     used_param_settings_with_sample_points_with_nan_fitness_removed = (d x (number of sample points - number of NANs in fitness)) shape numpy array. 
     fitness_array_with_nans_removed = (number of sample points - number of NANs in fitness) shape numpy array, of non-NAN fitness values. 
     '''
@@ -353,15 +330,19 @@ def generate_random_points_in_n_dim_hypercube(number_of_dimensions, number_of_sa
     '''
     This function generates a desired number of random samples from an n-dimensional space.
     
-    Inputs:
+    Parameters
+    ----------
     number_of_dimensions = integer of space dimensionality.
     number_of_samples = integer of desired number of samples.
     lower_bounds_across_dims = numpy array of lower bounds for each dimension (in order). 
     upper_bounds_across_dims = numpy array of upper bounds for each dimension (in order). 
     vector_non_randomised_parameter_values = numpy array of constant values parameters not being randomised should take. Leave np.inf in place for randomised params to maintain indices.
-    Output:
+    
+    Outputs
+    ----------
     sample_points = d x n numpy array of sample points (each column being a sample point).
     '''
+    
     vector_non_randomised_parameter_values = vector_non_randomised_parameter_values.astype(float) # vector_non_randomised_parameter_values has to be floats, otherwise sample_points[i] change doesn't work. 
     indices_randomised_parameters = np.where(vector_non_randomised_parameter_values == np.inf)[0]
     sample_points = np.array([vector_non_randomised_parameter_values,]*number_of_samples).transpose()
@@ -372,15 +353,9 @@ def generate_random_points_in_n_dim_hypercube(number_of_dimensions, number_of_sa
 
 def calc_calibration_loss_function(vec_theta, vec_theta_g, lower_bounds, upper_bounds):
     total_length = len(vec_theta) + len(vec_theta_g) + len(lower_bounds) + len(upper_bounds)
-    #print (total_length)
     assert (total_length/(len(vec_theta)) ==  4) # Quick and dirty length assert
     vec_theta_normalised = (vec_theta - lower_bounds) / (upper_bounds - lower_bounds)
     vec_theta_g_normalised = (vec_theta_g - lower_bounds) / (upper_bounds - lower_bounds)
     loss_function = np.sum((vec_theta_normalised - vec_theta_g_normalised))**2
     loss_vector = (vec_theta_normalised - vec_theta_g_normalised)**2
-    #print (f'vec_theta = {vec_theta}')
-    #print (f'vec_theta_normalised = {vec_theta_normalised}')
-    #print (f'vec_theta_g_normalised = {vec_theta_g_normalised}')
-    #print (f'loss_vector = {loss_vector}')
-    #print (f'loss value = {loss_function}')
     return loss_function
