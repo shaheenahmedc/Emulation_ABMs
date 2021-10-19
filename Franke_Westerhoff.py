@@ -6,22 +6,34 @@ def generate_Franke_Westerhoff_returns_time_series(params_vector, len_series, pa
     This function generates a time series of returns from the Franke_Westerhoff model. 
     Specifically, the DCA method is used, as opposed to the TPA method. See Franke_12 for more details. 
     We also only implement the HPM variant. 
+    
+    Parameters
+    ----------
     params_vector is divided as follows:
-    params_vector = [mu, beta, phi, chi, alpha_n, alpha_O, alpha_p, sigma_f, sigma_c]
-    Each parameter is a scalar float. 
+        params_vector = [mu, beta, phi, chi, alpha_n, alpha_O, alpha_p, sigma_f, sigma_c]
+        Each parameter is a scalar float. 
     
-    'Set' parameters:
-    mu = 0.01
-    beta = 1
-    phi = 0.12
-    chi = 1.5
-    sigma_f = 0.758
+        'Set' parameters:
+        mu = 0.01
+        beta = 1
+        phi = 0.12
+        chi = 1.5
+        sigma_f = 0.758
+        
+        Bounds for free parameters:
+        alpha_O in [-1,1]
+        alpha_p in [0,20]
+        alpha_n n [0, 2]
+        sigma_c in [0,5]
     
-    Bounds for free parameters:
-    alpha_O in [-1,1]
-    alpha_p in [0,20]
-    alpha_n n [0, 2]
-    sigma_c in [0,5]
+    len_series: length of time series. 
+    parameter_names: bad design. In Calibration.py, model_func is our general data generating process, but KS data generator needs four parameters, 
+        while AR, BH and FW only need 2. So I had to include these unused parameters here. Fix later. 
+    seed_for_KS : same as parameter_names. Bad design, figure out how to remove.
+    
+    Outputs
+    ----------
+    rr_flattened: output time-series from Franke_Westerhoff model
     '''
     
     T = len_series
@@ -78,21 +90,5 @@ def generate_Franke_Westerhoff_returns_time_series(params_vector, len_series, pa
     # returns
     rr = P[1:T+1] - P[0:T]
     rr_flattened = rr.flatten()
-    '''
-    # plot price
-    fig_p, ax_p = plt.subplots()
-    ax_p.plot(range(T), np.exp(P[1:]))
-    plt.xlabel('Time')
-    plt.ylabel('Price')
-    ax_p.set_title('Discrete Choice Approach: Wealth')
-    plt.show()
-
-    # plot returns
-    fig_r, ax_r = plt.subplots()
-    ax_r.plot(range(T), rr)
-    plt.xlabel('Time')
-    plt.ylabel('Returns')
-    ax_r.set_title('Discrete Choice Approach:Wealth')
-    plt.show()   
-    '''
+    
     return rr_flattened
